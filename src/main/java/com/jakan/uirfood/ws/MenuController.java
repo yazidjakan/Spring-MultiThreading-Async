@@ -2,7 +2,6 @@ package com.jakan.uirfood.ws;
 
 import com.jakan.uirfood.dto.MenuDto;
 import com.jakan.uirfood.service.Impl.MenuServiceImpl;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,7 +12,11 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/v1/menus")
 public class MenuController {
-    @Autowired private MenuServiceImpl menuService;
+    private MenuServiceImpl menuService;
+
+    public MenuController(MenuServiceImpl menuService){
+        this.menuService=menuService;
+    }
 
     @GetMapping("/")
     public ResponseEntity<List<MenuDto>> findAll(){

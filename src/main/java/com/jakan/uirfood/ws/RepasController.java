@@ -3,7 +3,6 @@ package com.jakan.uirfood.ws;
 import com.jakan.uirfood.dto.RepasDto;
 
 import com.jakan.uirfood.service.Impl.RepasServiceImpl;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,7 +13,11 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/v1/repas")
 public class RepasController {
-    @Autowired private RepasServiceImpl repasService;
+     private RepasServiceImpl repasService;
+
+     public RepasController(RepasServiceImpl repasService){
+         this.repasService=repasService;
+     }
 
     @GetMapping("/")
     public ResponseEntity<List<RepasDto>> findAll(){
