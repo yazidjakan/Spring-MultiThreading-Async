@@ -12,5 +12,5 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @AllArgsConstructor
 @Document(collection = "personnel")
 public class Personnel extends User {
-    @Id private String numPersonnel;
+     private String numPersonnel;
 }

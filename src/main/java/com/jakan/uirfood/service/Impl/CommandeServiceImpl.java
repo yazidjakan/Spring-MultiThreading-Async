@@ -23,7 +23,6 @@ import java.util.Optional;
 public class CommandeServiceImpl implements CommandeService {
     @Autowired private CommandeDao commandeDao;
     @Autowired private CommandeTransformer commandeTransformer;
-    @Autowired private RepasServiceImpl repasService;
     @Autowired private RepasTransformer repasTransformer;
     @Override
     public List<CommandeDto> findAll() {
@@ -38,16 +37,6 @@ public class CommandeServiceImpl implements CommandeService {
         return commandeTransformer.toDto(foundedCommande);
     }
 
-    private void findRepas(Commande commande){
-        List<RepasDto> foundedRepas=commandeDao.findRepasByCommande(commande);
-        if(foundedRepas != null && !foundedRepas.isEmpty()){
-            List<Repas> transformedRepas=repasTransformer.toEntity(foundedRepas);
-            commande.setRepas(transformedRepas);
-        }
-    }
-    private void prepareSave(Commande commande){
-        findRepas(commande);
-    }
 
     @Override
     public CommandeDto save(CommandeDto dto) {
@@ -56,7 +45,6 @@ public class CommandeServiceImpl implements CommandeService {
             throw new DuplicatedIdException("Commande", "Id", existCommande.id());
         }
         Commande transformedCommande=commandeTransformer.toEntity(dto);
-        prepareSave(transformedCommande);
         Commande savedCommande=commandeDao.save(transformedCommande);
         return commandeTransformer.toDto(savedCommande);
     }
