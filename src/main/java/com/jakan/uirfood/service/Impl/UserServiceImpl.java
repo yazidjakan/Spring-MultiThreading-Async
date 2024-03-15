@@ -5,7 +5,6 @@ import com.jakan.uirfood.dao.UserDao;
 import com.jakan.uirfood.dto.UserDto;
 import com.jakan.uirfood.exception.DuplicatedIdException;
 import com.jakan.uirfood.exception.ResourceNotFoundException;
-import com.jakan.uirfood.factory.UserFactory;
 import com.jakan.uirfood.service.facade.UserService;
 import com.jakan.uirfood.transformer.UserTransformer;
 import lombok.AllArgsConstructor;
@@ -43,7 +42,6 @@ public class UserServiceImpl implements UserService {
         if(existUser != null){
             new DuplicatedIdException("User", "Id", existUser.id());
         }
-        User user=UserFactory.getInstanceOf(dto.fonction());
         User entity=userTransformer.toEntity(dto);
         User savedUser=userDao.save(entity);
         dto=userTransformer.toDto(savedUser);

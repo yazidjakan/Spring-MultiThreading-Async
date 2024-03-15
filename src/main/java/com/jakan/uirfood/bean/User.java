@@ -1,5 +1,6 @@
 package com.jakan.uirfood.bean;
 
+import com.jakan.uirfood.enums.Fonction;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -16,6 +17,6 @@ public class User {
     private String prenom;
     private String email;
     private String password;
-    private String fonction;
+    private Fonction fonction;
 
 }
