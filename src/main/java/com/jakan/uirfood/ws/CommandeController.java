@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 @RestController
 @RequestMapping("/api/v1/commandes")
@@ -19,8 +20,9 @@ public class CommandeController {
          this.commandeService=commandeService;
      }
      @GetMapping("/")
-     public ResponseEntity<List<CommandeDto>> findAll(){
-         return ResponseEntity.ok(commandeService.findAll());
+     public CompletableFuture<ResponseEntity<List<CommandeDto>>> findAll(){
+         CompletableFuture<List<CommandeDto>> commandes=commandeService.findAll();
+         return commandes.thenApply(ResponseEntity::ok);
      }
 
      @GetMapping("/id/{id}")
@@ -29,12 +31,14 @@ public class CommandeController {
      }
 
      @PostMapping("/")
-    public ResponseEntity<CommandeDto> save(@RequestBody CommandeDto dto){
-         return new ResponseEntity<>(commandeService.save(dto), HttpStatus.CREATED);
+    public CompletableFuture<ResponseEntity<CommandeDto>> save(@RequestBody CommandeDto dto){
+         CompletableFuture<CommandeDto> savedCommande=commandeService.save(dto);
+         return savedCommande.thenApply(commande -> ResponseEntity.status(HttpStatus.CREATED).body(commande));
      }
      @PostMapping("/list/")
-     public ResponseEntity<List<CommandeDto>> save(@RequestBody List<CommandeDto> dtos){
-         return new ResponseEntity<>(commandeService.save(dtos), HttpStatus.CREATED);
+     public CompletableFuture<ResponseEntity<List<CommandeDto>>> save(@RequestBody List<CommandeDto> dtos){
+         CompletableFuture<List<CommandeDto>> savedCommandeList=commandeService.save(dtos);
+         return savedCommandeList.thenApply(commandes -> ResponseEntity.status(HttpStatus.CREATED).body(commandes));
      }
      @PutMapping("/id/{id}")
     public ResponseEntity<CommandeDto> updateById(@PathVariable String id){

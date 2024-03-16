@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 @RestController
 @RequestMapping("/api/v1/users")
@@ -19,8 +20,9 @@ public class UserController {
         this.userService=userService;
     }
     @GetMapping("/")
-    public ResponseEntity<List<UserDto>> findAll(){
-        return ResponseEntity.ok(userService.findAll());
+    public CompletableFuture<ResponseEntity<List<UserDto>>> findAll(){
+        CompletableFuture<List<UserDto>> users=userService.findAll();
+        return users.thenApply(ResponseEntity::ok);
     }
 
     @GetMapping("/id/{id}")
@@ -28,12 +30,14 @@ public class UserController {
         return ResponseEntity.ok(userService.findById(id));
     }
     @PostMapping("/")
-    public ResponseEntity<UserDto> save(@RequestBody UserDto dto){
-        return new ResponseEntity<>(userService.save(dto) ,HttpStatus.CREATED);
+    public CompletableFuture<ResponseEntity<UserDto>> save(@RequestBody UserDto dto){
+        CompletableFuture<UserDto> savedUser=userService.save(dto);
+        return savedUser.thenApply(user -> ResponseEntity.status(HttpStatus.CREATED).body(user));
     }
     @PostMapping("/list/")
-    public ResponseEntity<List<UserDto>> save(@RequestBody List<UserDto> dtos){
-        return new ResponseEntity<>(userService.save(dtos), HttpStatus.CREATED);
+    public CompletableFuture<ResponseEntity<List<UserDto>>> save(@RequestBody List<UserDto> dtos){
+        CompletableFuture<List<UserDto>> savedUsers=userService.save(dtos);
+        return savedUsers.thenApply(users -> ResponseEntity.status(HttpStatus.CREATED).body(users));
     }
     @PutMapping("/id/{id}")
     public ResponseEntity<UserDto> updateById(@PathVariable String id){

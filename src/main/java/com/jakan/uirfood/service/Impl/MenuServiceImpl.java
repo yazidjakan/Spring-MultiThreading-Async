@@ -11,15 +11,18 @@ import com.jakan.uirfood.service.facade.MenuService;
 import com.jakan.uirfood.transformer.CategorieTransformer;
 import com.jakan.uirfood.transformer.MenuTransformer;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 @AllArgsConstructor
+@Slf4j
 public class MenuServiceImpl implements MenuService {
     @Autowired private MenuDao menuDao;
     @Autowired private MenuTransformer menuTransformer;
@@ -27,9 +30,13 @@ public class MenuServiceImpl implements MenuService {
     @Autowired private CategorieTransformer categorieTransformer;
 
     @Override
-    public List<MenuDto> findAll() {
+    public CompletableFuture<List<MenuDto>> findAll() {
+        long startTime=System.currentTimeMillis();
+        log.info("get list of users by "+Thread.currentThread().getName());
         List<Menu> menus=menuDao.findAll();
-        return menuTransformer.toDto(menus);
+        long endTime=System.currentTimeMillis();
+        log.info("Total time {}",(endTime - startTime));
+        return CompletableFuture.completedFuture(menuTransformer.toDto(menus));
     }
 
     @Override
@@ -39,33 +46,32 @@ public class MenuServiceImpl implements MenuService {
         return menuTransformer.toDto(foundedMenu);
     }
 
-    private void findCategories(Menu menu){
-        List<CategorieDto> foundedCategories=categorieService.findAll();
-        if(foundedCategories != null && !foundedCategories.isEmpty()){
-            List<Categorie> transformedCategories=categorieTransformer.toEntity(foundedCategories);
-            menu.setCategories(transformedCategories);
-        }
-    }
-    private void prepareSave(Menu menu){
-        findCategories(menu);
-    }
     @Override
-    public MenuDto save(MenuDto dto) {
+    public CompletableFuture<MenuDto> save(MenuDto dto) {
+        long startTime=System.currentTimeMillis();
         MenuDto existMenu=findById(dto.id());
         if(existMenu != null){
             new DuplicatedIdException("Menu", "Id", existMenu.id());
         }
         Menu transformedMenu=menuTransformer.toEntity(dto);
+        log.info("saving user by "+Thread.currentThread().getName());
         Menu savedMenu=menuDao.save(transformedMenu);
-        return menuTransformer.toDto(savedMenu);
+        long endTime=System.currentTimeMillis();
+        log.info("Total time {}",(endTime - startTime));
+        return CompletableFuture.completedFuture(menuTransformer.toDto(savedMenu));
     }
 
     @Override
-    public List<MenuDto> save(List<MenuDto> dtos) {
+    public CompletableFuture<List<MenuDto>> save(List<MenuDto> dtos) {
+        long startTime=System.currentTimeMillis();
         if(dtos != null || !dtos.isEmpty()){
-            return dtos.stream().map(this::save).toList();
+            log.info("saving list of users of size {}", dtos.size()+" by "+Thread.currentThread().getName(), Thread.currentThread().getName());
+            dtos.stream().map(this::save).toList();
+            long endTime=System.currentTimeMillis();
+            log.info("Total time {}",(endTime - startTime));
+            return CompletableFuture.completedFuture(dtos);
         }
-        return Collections.emptyList();
+        return CompletableFuture.completedFuture(Collections.emptyList());
     }
 
     @Override

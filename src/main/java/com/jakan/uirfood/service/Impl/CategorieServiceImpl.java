@@ -1,25 +1,26 @@
 package com.jakan.uirfood.service.Impl;
 
 import com.jakan.uirfood.bean.Categorie;
-import com.jakan.uirfood.bean.Repas;
 import com.jakan.uirfood.dao.CategorieDao;
 import com.jakan.uirfood.dto.CategorieDto;
-import com.jakan.uirfood.dto.RepasDto;
 import com.jakan.uirfood.exception.DuplicatedIdException;
 import com.jakan.uirfood.exception.ResourceNotFoundException;
 import com.jakan.uirfood.service.facade.CategorieService;
 import com.jakan.uirfood.transformer.CategorieTransformer;
 import com.jakan.uirfood.transformer.RepasTransformer;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 @AllArgsConstructor
+@Slf4j
 public class CategorieServiceImpl implements CategorieService {
     @Autowired private CategorieDao categorieDao;
     @Autowired private CategorieTransformer categorieTransformer;
@@ -27,9 +28,13 @@ public class CategorieServiceImpl implements CategorieService {
     @Autowired private RepasTransformer repasTransformer;
 
     @Override
-    public List<CategorieDto> findAll() {
+    public CompletableFuture<List<CategorieDto>> findAll() {
+        long startTime=System.currentTimeMillis();
+        log.info("get list of users by "+Thread.currentThread().getName());
         List<Categorie> categories=categorieDao.findAll();
-        return categorieTransformer.toDto(categories);
+        long endTime=System.currentTimeMillis();
+        log.info("Total time {}",(endTime - startTime));
+        return CompletableFuture.completedFuture(categorieTransformer.toDto(categories));
     }
 
     @Override
@@ -40,33 +45,28 @@ public class CategorieServiceImpl implements CategorieService {
 
     }
 
-    private void findRepas(Categorie categorie) {
-        List<RepasDto> foundedRepas = repasService.findAll();
-        if (foundedRepas != null && !foundedRepas.isEmpty()) {
-            List<Repas> transformedRepas=repasTransformer.toEntity(foundedRepas);
-            categorie.setRepasList(transformedRepas);
-        }
-    }
-    private void prepareSave(Categorie categorie){
-        findRepas(categorie);
-    }
     @Override
-    public CategorieDto save(CategorieDto dto) {
+    public CompletableFuture<CategorieDto> save(CategorieDto dto) {
         CategorieDto foundedCategorie=findById(dto.id());
         if(foundedCategorie != null){
             new DuplicatedIdException("Categorie", "Id", foundedCategorie.id());
         }
         Categorie transformedCategorie=categorieTransformer.toEntity(dto);
         Categorie savedCategorie=categorieDao.save(transformedCategorie);
-        return categorieTransformer.toDto(savedCategorie);
+        return CompletableFuture.completedFuture(categorieTransformer.toDto(savedCategorie));
     }
 
     @Override
-    public List<CategorieDto> save(List<CategorieDto> dtos) {
+    public CompletableFuture<List<CategorieDto>> save(List<CategorieDto> dtos) {
+        long startTime=System.currentTimeMillis();
         if(dtos == null || dtos.isEmpty()){
-            return dtos.stream().map(this::save).toList();
+            log.info("saving list of users of size {}", dtos.size()+" by "+Thread.currentThread().getName(),Thread.currentThread().getName());
+            dtos.stream().map(this::save).toList();
+            long endTime=System.currentTimeMillis();
+            log.info("Total time {}",(endTime - startTime));
+            return CompletableFuture.completedFuture(dtos);
         }
-        return Collections.emptyList();
+        return CompletableFuture.completedFuture(Collections.emptyList());
     }
 
     @Override

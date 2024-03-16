@@ -1,5 +1,6 @@
 package com.jakan.uirfood.ws;
 
+
 import com.jakan.uirfood.dto.MenuDto;
 import com.jakan.uirfood.service.Impl.MenuServiceImpl;
 import org.springframework.http.HttpStatus;
@@ -8,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 @RestController
 @RequestMapping("/api/v1/menus")
@@ -19,20 +21,23 @@ public class MenuController {
     }
 
     @GetMapping("/")
-    public ResponseEntity<List<MenuDto>> findAll(){
-        return ResponseEntity.ok(menuService.findAll());
+    public CompletableFuture<ResponseEntity<List<MenuDto>>> findAll(){
+        CompletableFuture<List<MenuDto>> menus=menuService.findAll();
+        return menus.thenApply(ResponseEntity::ok);
     }
     @GetMapping("/id/{id}")
     public ResponseEntity<MenuDto> findById(@PathVariable String id){
         return ResponseEntity.ok(menuService.findById(id));
     }
     @PostMapping("/")
-    public ResponseEntity<MenuDto> save(@RequestBody MenuDto dto){
-        return new ResponseEntity<>(menuService.save(dto), HttpStatus.CREATED);
+    public CompletableFuture<ResponseEntity<MenuDto>> save(@RequestBody MenuDto dto){
+        CompletableFuture<MenuDto> savedMenu=menuService.save(dto);
+        return savedMenu.thenApply(menu -> ResponseEntity.status(HttpStatus.CREATED).body(menu));
     }
     @PostMapping("/list/")
-    public ResponseEntity<List<MenuDto>> save(@RequestBody List<MenuDto> dtos){
-        return new ResponseEntity<>(menuService.save(dtos), HttpStatus.CREATED);
+    public CompletableFuture<ResponseEntity<List<MenuDto>>> save(@RequestBody List<MenuDto> dtos){
+        CompletableFuture<List<MenuDto>> savedMenuList=menuService.save(dtos);
+        return savedMenuList.thenApply(menus -> ResponseEntity.status(HttpStatus.CREATED).body(menus));
     }
     @PutMapping("/")
     public ResponseEntity<MenuDto> updateById(@PathVariable String id){

@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 @RestController
 @RequestMapping("/api/v1/categories")
@@ -19,20 +20,23 @@ public class CategorieController {
     }
 
     @GetMapping("/")
-    public ResponseEntity<List<CategorieDto>> findAll(){
-        return ResponseEntity.ok(categorieService.findAll());
+    public CompletableFuture<ResponseEntity<List<CategorieDto>>> findAll(){
+        CompletableFuture<List<CategorieDto>> categories=categorieService.findAll();
+        return categories.thenApply(ResponseEntity::ok);
     }
     @GetMapping("/id/{id}")
     public ResponseEntity<CategorieDto> findById(@PathVariable String id){
         return ResponseEntity.ok(categorieService.findById(id));
     }
     @PostMapping("/")
-    public ResponseEntity<CategorieDto> save(@RequestBody CategorieDto dto){
-        return new ResponseEntity<>(categorieService.save(dto), HttpStatus.CREATED);
+    public CompletableFuture<ResponseEntity<CategorieDto>> save(@RequestBody CategorieDto dto){
+        CompletableFuture<CategorieDto> savedCategorie=categorieService.save(dto);
+        return savedCategorie.thenApply(categorie -> ResponseEntity.status(HttpStatus.CREATED).body(categorie));
     }
     @PostMapping("/list/")
-    public ResponseEntity<List<CategorieDto>> save(@RequestBody List<CategorieDto> dtos){
-        return new ResponseEntity<>(categorieService.save(dtos), HttpStatus.CREATED);
+    public CompletableFuture<ResponseEntity<List<CategorieDto>>> save(@RequestBody List<CategorieDto> dtos){
+        CompletableFuture<List<CategorieDto>> savedCategorieList=categorieService.save(dtos);
+        return savedCategorieList.thenApply(categories -> ResponseEntity.status(HttpStatus.CREATED).body(categories));
     }
     @PutMapping("/id/{id}")
     public ResponseEntity<CategorieDto> updateById(@PathVariable String id){

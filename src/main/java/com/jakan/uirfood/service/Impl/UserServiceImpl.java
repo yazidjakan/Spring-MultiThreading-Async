@@ -8,23 +8,31 @@ import com.jakan.uirfood.exception.ResourceNotFoundException;
 import com.jakan.uirfood.service.facade.UserService;
 import com.jakan.uirfood.transformer.UserTransformer;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 @AllArgsConstructor
+@Slf4j
 public class UserServiceImpl implements UserService {
     @Autowired private UserDao userDao;
     @Autowired private UserTransformer userTransformer;
 
     @Override
-    public List<UserDto> findAll() {
+    public CompletableFuture<List<UserDto>> findAll() {
+        long startTime=System.currentTimeMillis();
+        log.info("get list of users by "+Thread.currentThread().getName());
         List<User> users=userDao.findAll();
-        return userTransformer.toDto(users);
+        long endTime=System.currentTimeMillis();
+        log.info("Total time {}",(endTime - startTime));
+        return CompletableFuture.completedFuture(userTransformer.toDto(users));
     }
 
     @Override
@@ -37,7 +45,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserDto save(UserDto dto) {
+    public CompletableFuture<UserDto> save(UserDto dto) {
         UserDto existUser=findById(dto.id());
         if(existUser != null){
             new DuplicatedIdException("User", "Id", existUser.id());
@@ -45,15 +53,20 @@ public class UserServiceImpl implements UserService {
         User entity=userTransformer.toEntity(dto);
         User savedUser=userDao.save(entity);
         dto=userTransformer.toDto(savedUser);
-        return dto;
+        return CompletableFuture.completedFuture(dto);
     }
 
     @Override
-    public List<UserDto> save(List<UserDto> dtos) {
+    public CompletableFuture<List<UserDto>> save(List<UserDto> dtos) {
+        long startTime=System.currentTimeMillis();
         if(dtos != null && !dtos.isEmpty()){
-            return dtos.stream().map(this::save).toList();
+            log.info("saving list of users of size {}", dtos.size() +" by "+ Thread.currentThread().getName(), "{}", Thread.currentThread().getName());
+            dtos.stream().map(this::save).toList();
+            long endTime=System.currentTimeMillis();
+            log.info("Total time {}",(endTime - startTime));
+            return CompletableFuture.completedFuture(dtos);
         }
-        return Collections.emptyList();
+        return CompletableFuture.completedFuture(Collections.emptyList());
     }
 
     @Override

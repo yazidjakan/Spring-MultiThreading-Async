@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 @RestController
 @RequestMapping("/api/v1/repas")
@@ -20,20 +21,23 @@ public class RepasController {
      }
 
     @GetMapping("/")
-    public ResponseEntity<List<RepasDto>> findAll(){
-        return ResponseEntity.ok(repasService.findAll());
+    public CompletableFuture<ResponseEntity<List<RepasDto>>> findAll(){
+         CompletableFuture<List<RepasDto>> repasList=repasService.findAll();
+        return repasList.thenApply(ResponseEntity::ok);
     }
     @GetMapping("/id/{id}")
     public ResponseEntity<RepasDto> findById(@PathVariable String id){
         return ResponseEntity.ok(repasService.findById(id));
     }
     @PostMapping("/")
-    public ResponseEntity<RepasDto> save(@RequestBody RepasDto dto){
-        return new ResponseEntity<>(repasService.save(dto), HttpStatus.CREATED);
+    public CompletableFuture<ResponseEntity<RepasDto>> save(@RequestBody RepasDto dto){
+        CompletableFuture<RepasDto> savedRepas=repasService.save(dto);
+        return savedRepas.thenApply(repas -> ResponseEntity.status(HttpStatus.CREATED).body(repas));
     }
     @PostMapping("/list/")
-    public ResponseEntity<List<RepasDto>> save(@RequestBody List<RepasDto> dtos){
-        return new ResponseEntity<>(repasService.save(dtos), HttpStatus.CREATED);
+    public CompletableFuture<ResponseEntity<List<RepasDto>>> save(@RequestBody List<RepasDto> dtos){
+        CompletableFuture<List<RepasDto>> savedRepasList=repasService.save(dtos);
+        return savedRepasList.thenApply(repas -> ResponseEntity.status(HttpStatus.CREATED).body(repas));
     }
     @PutMapping("/id/{id}")
     public ResponseEntity<RepasDto> updateById(@PathVariable String id){

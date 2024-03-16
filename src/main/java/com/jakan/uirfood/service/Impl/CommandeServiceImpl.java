@@ -11,23 +11,30 @@ import com.jakan.uirfood.service.facade.CommandeService;
 import com.jakan.uirfood.transformer.CommandeTransformer;
 import com.jakan.uirfood.transformer.RepasTransformer;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 @AllArgsConstructor
+@Slf4j
 public class CommandeServiceImpl implements CommandeService {
     @Autowired private CommandeDao commandeDao;
     @Autowired private CommandeTransformer commandeTransformer;
     @Autowired private RepasTransformer repasTransformer;
     @Override
-    public List<CommandeDto> findAll() {
+    public CompletableFuture<List<CommandeDto>> findAll() {
+        long startTime=System.currentTimeMillis();
+        log.info("get list of users by "+Thread.currentThread().getName());
         List<Commande> commandes=commandeDao.findAll();
-        return commandeTransformer.toDto(commandes);
+        long endTime=System.currentTimeMillis();
+        log.info("Total time {}",(endTime - startTime));
+        return CompletableFuture.completedFuture(commandeTransformer.toDto(commandes));
     }
 
     @Override
@@ -39,22 +46,31 @@ public class CommandeServiceImpl implements CommandeService {
 
 
     @Override
-    public CommandeDto save(CommandeDto dto) {
+    public CompletableFuture<CommandeDto> save(CommandeDto dto) {
+        long startTime=System.currentTimeMillis();
         CommandeDto existCommande=findById(dto.id());
         if(existCommande != null){
             throw new DuplicatedIdException("Commande", "Id", existCommande.id());
         }
         Commande transformedCommande=commandeTransformer.toEntity(dto);
+        log.info("saving user by "+Thread.currentThread().getName());
         Commande savedCommande=commandeDao.save(transformedCommande);
-        return commandeTransformer.toDto(savedCommande);
+        long endTime=System.currentTimeMillis();
+        log.info("Total time {}",(endTime - startTime));
+        return CompletableFuture.completedFuture(commandeTransformer.toDto(savedCommande));
     }
 
     @Override
-    public List<CommandeDto> save(List<CommandeDto> dtos) {
+    public CompletableFuture<List<CommandeDto>> save(List<CommandeDto> dtos) {
+        long startTime=System.currentTimeMillis();
         if(dtos == null || dtos.isEmpty()){
-            return dtos.stream().map(this::save).toList();
+            log.info("saving list of users of size {}", dtos.size()+" by "+Thread.currentThread().getName(), Thread.currentThread().getName());
+            dtos.stream().map(this::save).toList();
+            long endTime=System.currentTimeMillis();
+            log.info("Total time {}",(endTime - startTime));
+            return CompletableFuture.completedFuture(dtos);
         }
-        return Collections.emptyList();
+        return CompletableFuture.completedFuture(Collections.emptyList());
     }
 
     @Override

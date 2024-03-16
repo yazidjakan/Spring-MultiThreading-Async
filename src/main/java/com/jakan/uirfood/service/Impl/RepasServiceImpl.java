@@ -8,23 +8,30 @@ import com.jakan.uirfood.exception.ResourceNotFoundException;
 import com.jakan.uirfood.service.facade.RepasService;
 import com.jakan.uirfood.transformer.RepasTransformer;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 @AllArgsConstructor
+@Slf4j
 public class RepasServiceImpl implements RepasService {
     @Autowired private RepasDao repasDao;
     @Autowired private RepasTransformer repasTransformer;
 
     @Override
-    public List<RepasDto> findAll() {
+    public CompletableFuture<List<RepasDto>> findAll() {
+        long startTime=System.currentTimeMillis();
+        log.info("get list of users by "+Thread.currentThread().getName());
         List<Repas> repasList=repasDao.findAll();
-        return repasTransformer.toDto(repasList);
+        long endTime=System.currentTimeMillis();
+        log.info("Total time {}",(endTime - startTime));
+        return CompletableFuture.completedFuture(repasTransformer.toDto(repasList));
     }
 
     @Override
@@ -35,22 +42,31 @@ public class RepasServiceImpl implements RepasService {
     }
 
     @Override
-    public RepasDto save(RepasDto dto) {
+    public CompletableFuture<RepasDto> save(RepasDto dto) {
+        long startTime=System.currentTimeMillis();
         RepasDto existRepas=findById(dto.id());
         if(existRepas != null){
             new DuplicatedIdException("Repas", "Id", existRepas.id());
         }
         Repas repas=repasTransformer.toEntity(dto);
+        log.info("saving user by "+Thread.currentThread().getName());
         Repas savedRepas=repasDao.save(repas);
-        return repasTransformer.toDto(savedRepas);
+        long endTime=System.currentTimeMillis();
+        log.info("Total time {}",(endTime - startTime));
+        return CompletableFuture.completedFuture(repasTransformer.toDto(savedRepas));
     }
 
     @Override
-    public List<RepasDto> save(List<RepasDto> dtos) {
+    public CompletableFuture<List<RepasDto>> save(List<RepasDto> dtos) {
+        long startTime=System.currentTimeMillis();
         if(dtos != null && !dtos.isEmpty()){
-            return dtos.stream().map(this::save).toList();
+            log.info("Saving list of users of size {} ",dtos.size()+" by "+Thread.currentThread().getName(), Thread.currentThread().getName());
+            dtos.stream().map(this::save).toList();
+            long endTime=System.currentTimeMillis();
+            log.info("Total time {}",(endTime - startTime));
+            return CompletableFuture.completedFuture(dtos);
         }
-        return Collections.emptyList();
+        return CompletableFuture.completedFuture(Collections.emptyList());
     }
 
     @Override
