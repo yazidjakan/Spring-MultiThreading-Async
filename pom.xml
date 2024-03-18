@@ -9,7 +9,7 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.jakan</groupId>
-	<artifactId>uirfood</artifactId>
+	<artifactId>spring-MultiThreading-Async</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>uirfood</name>
 	<description>Solution web de livraison de repas à l&apos;uir</description>
